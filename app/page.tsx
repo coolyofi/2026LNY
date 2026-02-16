@@ -111,7 +111,7 @@ export default function Home() {
   }, [increment, blessingWords])
 
   return (
-    <main className="relative flex flex-col items-center justify-between min-h-screen p-4 overflow-hidden">
+    <main className="relative flex flex-col items-center justify-between min-h-screen p-4">
       {/* Decorative Border */}
       <div className="absolute inset-4 border-2 border-yellow-500/20 pointer-events-none rounded-xl" />
 

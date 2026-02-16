@@ -48,12 +48,10 @@ export default function BlessingPopup() {
 
     if (!important) {
       const positions: CardPosition[] = [
-        { top: '15%', left: '8%' },
-        { top: '15%', right: '8%', left: 'auto' },
-        { top: '65%', left: '8%' },
-        { top: '65%', right: '8%', left: 'auto' },
-        { top: '35%', left: '5%' },
-        { top: '35%', right: '5%', left: 'auto' },
+        { top: '8%', left: '8%' },
+        { top: '8%', right: '8%', left: 'auto' },
+        { top: '80%', left: '8%' },
+        { top: '80%', right: '8%', left: 'auto' },
       ]
       setPosition(positions[Math.floor(Math.random() * positions.length)])
     }
