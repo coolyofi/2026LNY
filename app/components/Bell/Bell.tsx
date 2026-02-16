@@ -1,18 +1,24 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 
 interface BellProps {
   count: number
   onClick: (e: React.MouseEvent | React.TouchEvent) => void
 }
 
-const auspiciousEmojis = ['🔔', '🧧', '🐎', '🍊', '🏮', '🎆']
-
 export default function Bell({ count, onClick }: BellProps) {
-  // 按照用户需求，固定为红包图标，不再随机切换
-  const currentEmoji = '🧧'
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onClick(e)
+  }
+
+  const handleTouch = (e: React.TouchEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onClick(e)
+  }
 
   return (
     <motion.div
@@ -26,18 +32,17 @@ export default function Bell({ count, onClick }: BellProps) {
         type: "spring",
         stiffness: 300
       }}
-      className="relative z-10 cursor-pointer select-none text-[160px] md:text-[220px] bell-root"
+      className="relative z-10 cursor-pointer select-none bell-root"
       style={{
-        filter: 'drop-shadow(0 0 40px rgba(212,0,0,0.6))',
+        fontSize: 'clamp(120px, 30vw, 280px)',
+        lineHeight: '1',
+        filter: 'drop-shadow(0 0 40px rgba(212,0,0,0.8))',
       }}
-      onMouseDown={(e) => onClick(e)}
-      onTouchStart={(e) => {
-        e.preventDefault()
-        onClick(e)
-      }}
+      onClick={handleClick}
+      onTouchStart={handleTouch}
     >
-      <span className="relative">
-        {currentEmoji}
+      <span className="relative inline-block">
+        🧧
         {/* Shine effect for milestones */}
         {count > 0 && count % 10 === 0 && (
           <motion.div

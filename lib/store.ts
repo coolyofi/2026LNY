@@ -17,7 +17,8 @@ export const usePrayerStore = create<PrayerState>()(
       achievements: [],
       
       increment: () => {
-        const newCount = get().count + 1
+        const currentCount = get().count
+        const newCount = currentCount + 1
         const newTotal = get().totalPrayers + 1
         
         const newAchievements = [...get().achievements]

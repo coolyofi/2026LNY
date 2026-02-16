@@ -1,27 +1,16 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
-import dynamic from 'next/dynamic'
+import { useState, useCallback, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePrayerStore } from '@/lib/store'
 import { FloatingText } from '@/app/components/FloatingText/FloatingText'
 import { FloatingMessage } from '@/lib/types'
 
-const Bell = dynamic(() => import('@/app/components/Bell/Bell'), { ssr: false })
-const Fireworks = dynamic(() => import('@/app/components/Fireworks/Fireworks'), { ssr: false })
-
 export default function Home() {
-  const { count, increment, reset } = usePrayerStore()
+  const { count, increment } = usePrayerStore()
   const [floatingMessages, setFloatingMessages] = useState<FloatingMessage[]>([])
-  const [showGrandFinale, setShowGrandFinale] = useState(false)
-
-  // 1. 赛博敲击反馈：各种“XX +1”
-  const additionExpressions = useMemo(() => [
-    "好运 +1", "福气 +1", "功德 +1", "财气 +1", "喜气 +1",
-    "万福 +1", "吉利 +1", "顺利 +1", "健康 +1", "平安 +1",
-    "马力 +1", "锦鲤 +1", "元气 +1", "灵气 +1", "欧气 +1",
-    "加薪 +1", "暴富 +1", "脱单 +1", "上榜 +1", "满分 +1"
-  ], [])
+  const clickCountRef = useRef(0) // 本地点击计数
+  const nextBlessingRef = useRef(Math.floor(Math.random() * 5) + 4) // 首次4-8次按下时触发
 
   const blessingWords = useMemo(() => [
     "福满乾坤", "马到成功", "万事大吉", "财源滚滚", "心想事成",
@@ -49,6 +38,7 @@ export default function Home() {
 
   const handleHit = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     increment()
+    clickCountRef.current += 1 // 增加本地点击计数
 
     // Get viewport coords
     let clientX: number, clientY: number
@@ -66,8 +56,7 @@ export default function Home() {
     const relX = clientX - rect.left
     const relY = clientY - rect.top
 
-    // Emit 1-3 random "+1" feedbacks 
-    const now = Date.now()
+    // Emit 1 random "+1" feedback 
     const blessingPrefixes = [
       '好运', '福气', '功德', '财气', '喜气',
       '万福', '吉利', '顺利', '健康', '平安',
@@ -75,34 +64,42 @@ export default function Home() {
       '加薪', '暴富', '脱单', '上榜', '满分'
     ]
     
-    // Generate 1-3 random feedbacks instead of 20
-    const numFeedbacks = Math.floor(Math.random() * 3) + 1
-    const feedbacks: FloatingMessage[] = Array.from({ length: numFeedbacks }).map((_, i) => ({
-      id: now + i,
+    // Generate 1 feedback
+    const feedbacks: FloatingMessage[] = [{
+      id: Date.now() + Math.random() * 10000,
       text: `${blessingPrefixes[Math.floor(Math.random() * blessingPrefixes.length)]} +1`,
       x: relX,
-      y: relY + i * 35, // offset vertically to avoid stacking
+      y: relY,
       color: '#FFFFFF',
       type: 'feedback'
-    }))
+    }]
 
-    // Randomly generate environment blessings (30% chance, not every click)
-    const shouldShowBlessing = Math.random() < 0.35
+    // Randomly generate environment blessings (每4-8次按下触发一次)
     const blessingMsgs: FloatingMessage[] = []
     
-    if (shouldShowBlessing) {
-      // Generate 2-3 blessing words for subtitle effect
-      const numBlessings = Math.floor(Math.random() * 2) + 2 // 2 or 3
-      for (let i = 0; i < numBlessings; i++) {
-        blessingMsgs.push({
-          id: now + 1000 + i,
-          text: blessingWords[Math.floor(Math.random() * blessingWords.length)],
-          x: relX,
-          y: relY + i * 50, // stack vertically for subtitle effect
-          color: colors[Math.floor(Math.random() * colors.length)],
-          type: 'environment'
-        })
-      }
+    if (clickCountRef.current >= nextBlessingRef.current) {
+      // 显示祝福词 - 在整个屏幕范围内随机显示
+      // 在屏幕宽度的20%-80%范围内随机显示（避免超出边界）
+      const screenWidth = window.innerWidth
+      const screenHeight = window.innerHeight
+      const minX = screenWidth * 0.1
+      const maxX = screenWidth * 0.9
+      const minY = screenHeight * 0.1
+      const maxY = screenHeight * 0.85
+      
+      const randomX = minX + Math.random() * (maxX - minX)
+      const randomY = minY + Math.random() * (maxY - minY)
+      
+      blessingMsgs.push({
+        id: Date.now() + Math.random() * 10000 + 1000,
+        text: blessingWords[Math.floor(Math.random() * blessingWords.length)],
+        x: randomX,
+        y: randomY,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        type: 'environment'
+      })
+      // 计算下一次触发的点数 (当前点数 + 4-8)
+      nextBlessingRef.current = clickCountRef.current + Math.floor(Math.random() * 5) + 4
     }
 
     setFloatingMessages(prev => [...prev.slice(-50), ...feedbacks, ...blessingMsgs])
@@ -111,11 +108,7 @@ export default function Home() {
     setTimeout(() => {
       setFloatingMessages(prev => prev.filter(msg => !feedbacks.some(f => f.id === msg.id) && !blessingMsgs.some(b => b.id === msg.id)))
     }, 8000)
-
-    if ((count + 1) % 100 === 0) {
-      setShowGrandFinale(true)
-    }
-  }, [count, increment, blessingWords, additionExpressions])
+  }, [increment, blessingWords])
 
   return (
     <main className="relative flex flex-col items-center justify-between min-h-screen p-4 overflow-hidden">
@@ -133,8 +126,25 @@ export default function Home() {
       </div>
 
       {/* Bell Area */}
-      <div className="flex-1 flex items-center justify-center w-full relative">
-        <Bell count={count} onClick={handleHit} />
+      <div className="flex-1 flex items-center justify-center w-full relative z-20">
+        <button 
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            handleHit(e)
+          }}
+          className="text-8xl cursor-pointer select-none active:scale-95 bell-root"
+          style={{
+            filter: 'drop-shadow(0 0 40px rgba(212,0,0,0.8))',
+            border: 'none',
+            background: 'none',
+            padding: 0,
+            pointerEvents: 'auto',
+            display: 'inline-block',
+          }}
+        >
+          🧧
+        </button>
         
         {/* Floating Messages */}
         <AnimatePresence>
@@ -144,7 +154,7 @@ export default function Home() {
         </AnimatePresence>
 
         {/* Milestone Effects */}
-        {count > 0 && count % 10 === 0 && !showGrandFinale && (
+        {count > 0 && count % 10 === 0 && (
              <motion.div 
                initial={{ opacity: 0 }}
                animate={{ opacity: [0, 1, 0] }}
@@ -155,49 +165,14 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <div className="mb-12 text-center z-10">
-        <div className="px-6 py-3 bg-black/30 backdrop-blur-md rounded-full border border-white/10">
-          <p className="text-sm md:text-base tracking-widest opacity-60">
-            一念虔诚，福报自来 | 每一次敲击，都是祈愿
+      <div className="mb-10 text-center z-10">
+        <div className="px-4 md:px-6 py-2 md:py-3 bg-black/30 backdrop-blur-md rounded-full border border-white/10">
+          <p className="text-xs md:text-sm tracking-widest opacity-70" style={{ fontFamily: "'STKaiti', 'KaiTi', serif" }}>
+            每一击 · 都是福
           </p>
         </div>
       </div>
 
-      {/* Grand Finale Modal */}
-      <AnimatePresence>
-        {showGrandFinale && (
-          <>
-            <Fireworks />
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-xl p-6"
-            >
-              <motion.div
-                initial={{ scale: 0.8, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                className="bg-[#8b0000] border-4 border-yellow-500 p-8 md:p-12 rounded-3xl text-center shadow-[0_0_50px_rgba(255,207,77,0.5)] max-w-md w-full"
-              >
-                <div className="text-6xl mb-6">🐎💨</div>
-                <h3 className="text-3xl font-bold text-yellow-400 mb-4">百折祈愿 · 福报正堂</h3>
-                <p className="text-lg leading-relaxed mb-8 opacity-90">
-                  百番虔诚，福运正堂。<br/>
-                  恭喜你的 100 次祈福之心。<br/>
-                  新年新机，马年扬帆，<br/>
-                  祝你福泽绵长，好运如影随形。
-                </p>
-                <button
-                  onClick={() => { setShowGrandFinale(false); reset(); }}
-                  className="px-8 py-3 bg-yellow-500 hover:bg-yellow-400 text-red-900 font-bold rounded-full transition-colors shadow-lg"
-                >
-                  继续纳福
-                </button>
-              </motion.div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
     </main>
   )
 }

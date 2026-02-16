@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePrayerStore } from '../../../lib/store'
-import { findBlessing } from '../../../lib/blessings'
+import { nearestBlessingAtOrBelow, isImportantMilestone } from '../../../lib/blessings'
 import Fireworks from '../Fireworks/Fireworks'
 
 interface CardPosition {
@@ -17,6 +17,7 @@ export default function BlessingPopup() {
   const [visible, setVisible] = useState(false)
   const [blessing, setBlessing] = useState<any | null>(null)
   const [position, setPosition] = useState<CardPosition>({ top: '20%', left: '10%' })
+  const [isImportant, setIsImportant] = useState(false)
   const lastShown = useRef<number | null>(null)
 
   // 解析祝福文案为祝福语和解释
@@ -35,30 +36,131 @@ export default function BlessingPopup() {
   }
 
   useEffect(() => {
-    const b = findBlessing(count)
+    const b = nearestBlessingAtOrBelow(count)
     if (!b) return
     if (lastShown.current === b.count) return
 
     lastShown.current = b.count
+    const important = isImportantMilestone(b.count)
     setBlessing(b)
+    setIsImportant(important)
     setVisible(true)
 
-    const positions: CardPosition[] = [
-      { top: '15%', left: '8%' },
-      { top: '15%', right: '8%', left: 'auto' },
-      { top: '65%', left: '8%' },
-      { top: '65%', right: '8%', left: 'auto' },
-      { top: '35%', left: '5%' },
-      { top: '35%', right: '5%', left: 'auto' },
-    ]
-    setPosition(positions[Math.floor(Math.random() * positions.length)])
+    if (!important) {
+      const positions: CardPosition[] = [
+        { top: '15%', left: '8%' },
+        { top: '15%', right: '8%', left: 'auto' },
+        { top: '65%', left: '8%' },
+        { top: '65%', right: '8%', left: 'auto' },
+        { top: '35%', left: '5%' },
+        { top: '35%', right: '5%', left: 'auto' },
+      ]
+      setPosition(positions[Math.floor(Math.random() * positions.length)])
+    }
 
-    const t = setTimeout(() => setVisible(false), 5000)
+    // 重要里程碑显示4秒，非重要里程碑显示3秒
+    const displayTime = important ? 4000 : 3000
+    const t = setTimeout(() => setVisible(false), displayTime)
     return () => clearTimeout(t)
   }, [count])
 
   const parsed = blessing ? parseMessage(blessing.message) : { blessing: '', explanation: '' }
 
+  if (isImportant) {
+    // 重要里程碑 - 正式弹窗
+    return (
+      <AnimatePresence>
+        {visible && blessing && (
+          <>
+            <Fireworks />
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setVisible(false)}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm cursor-pointer"
+            >
+              <motion.div
+                key={`milestone-${blessing.count}`}
+                initial={{ scale: 0.5, y: 40 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.3, y: -40 }}
+                transition={{ type: 'spring', stiffness: 180, damping: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-gradient-to-b from-amber-50 via-red-50 to-amber-100 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.2)] border-2 border-amber-300 p-6 max-w-sm w-[85vw] relative overflow-hidden"
+              >
+                {/* 背景装饰 - 更小 */}
+                <div className="absolute top-0 left-0 w-20 h-20 bg-amber-200/20 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+                <div className="absolute bottom-0 right-0 w-24 h-24 bg-red-200/20 rounded-full translate-x-1/3 translate-y-1/3"></div>
+
+                {/* 内容 */}
+                <div className="relative z-10 text-center">
+                  {/* 顶部装饰条纹 */}
+                  <div className="h-0.5 w-16 mx-auto mb-4 bg-gradient-to-r from-amber-400 via-red-400 to-amber-400"></div>
+
+                  {/* 里程碑标记 - 改为小球 */}
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="w-3 h-3 rounded-full bg-red-500"
+                    ></motion.div>
+                    <span className="text-xs font-bold text-amber-900">第 {blessing.count} 份福报</span>
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="w-3 h-3 rounded-full bg-amber-400"
+                    ></motion.div>
+                  </div>
+
+                  {/* 标题 */}
+                  <h3 className="text-lg md:text-xl font-bold mb-3" style={{
+                    fontFamily: "'STKaiti', 'KaiTi', serif",
+                    background: 'linear-gradient(135deg, #d97706, #b91c1c)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text'
+                  }}>
+                    {blessing.title}
+                  </h3>
+
+                  {/* 祝福内容 - 更小的字体 */}
+                  <p className="text-sm md:text-base font-medium text-amber-900 leading-relaxed mb-3 blessing-serif">
+                    {parsed.blessing}
+                  </p>
+
+                  {/* 解释内容 */}
+                  {parsed.explanation && (
+                    <p className="text-xs md:text-sm leading-relaxed text-gray-700 mb-4 blessing-serif opacity-85">
+                      {parsed.explanation}
+                    </p>
+                  )}
+
+                  {/* 底部装饰条纹 */}
+                  <div className="h-0.5 w-16 mx-auto mt-4 bg-gradient-to-r from-amber-400 via-red-400 to-amber-400"></div>
+
+                  {/* 继续祈福按钮 - 更小 */}
+                  <motion.button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setVisible(false)
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="mt-5 px-6 py-2 bg-gradient-to-r from-amber-400 to-red-400 hover:from-amber-300 hover:to-red-300 text-amber-900 font-bold rounded-full transition-all shadow-lg hover:shadow-xl text-sm"
+                  >
+                    继续祈福
+                  </motion.button>
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    )
+  }
+
+  // 普通里程碑 - 贺卡样式 - 更紧凑
   return (
     <AnimatePresence>
       {visible && blessing && (
@@ -69,7 +171,7 @@ export default function BlessingPopup() {
             initial={{ opacity: 0, scale: 0.3, rotate: -8, y: 30 }}
             animate={{ opacity: 1, scale: 1, rotate: 0, y: 0 }}
             exit={{ opacity: 0, scale: 0.2, rotate: 8, y: -50 }}
-            transition={{ 
+            transition={{
               type: 'spring',
               stiffness: 200,
               damping: 15,
@@ -80,57 +182,25 @@ export default function BlessingPopup() {
               top: position.top,
               left: position.left,
               right: position.right,
-              width: 'clamp(280px, 90vw, 360px)',
+              width: 'clamp(220px, 75vw, 280px)',
             }}
           >
-            {/* 装饰性背景光晕 */}
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-300/20 to-red-400/20 blur-2xl rounded-3xl" />
+            {/* 贺卡主体 - 更紧凑 */}
+            <div className="relative bg-gradient-to-br from-amber-50 via-red-50 to-amber-100 rounded-lg overflow-hidden shadow-lg border border-amber-200/40">
 
-            {/* 贺卡主体 */}
-            <div className="relative bg-gradient-to-br from-amber-50 via-red-50 to-amber-100 rounded-2xl overflow-hidden shadow-2xl border-2 border-amber-200/50">
-              
-              {/* 顶部装饰条纹 */}
-              <div className="h-1 bg-gradient-to-r from-amber-400 via-red-400 to-amber-400"></div>
+              {/* 顶部装饰条纹 - 更小 */}
+              <div className="h-0.5 bg-gradient-to-r from-amber-400 via-red-400 to-amber-400"></div>
 
-              {/* 内容区域 */}
-              <div className="p-5 md:p-6 text-center relative">
-                
-                {/* 装饰角落 */}
-                <div className="absolute top-3 left-3 w-8 h-8 border-l-2 border-t-2 border-amber-300/60"></div>
-                <div className="absolute bottom-3 right-3 w-8 h-8 border-r-2 border-b-2 border-amber-300/60"></div>
+              {/* 内容区域 - 更紧凑 */}
+              <div className="p-3 md:p-4 text-center relative">
 
-                {/* 里程碑数字徽章（禅意动画） */}
-                <motion.div 
-                  className="inline-block mb-4"
-                >
-                  <motion.div
-                    animate={{
-                      scale: [1, 1.05, 1],
-                      opacity: [0.8, 1, 0.8],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: 'easeInOut'
-                    }}
-                    className="relative w-16 h-16"
-                  >
-                    {/* 禅意外圈光晕 */}
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-                      className="absolute inset-0 rounded-full border border-red-300/30"
-                    />
-                    
-                    {/* 中间数字 */}
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                      {blessing.count}
-                    </div>
-                  </motion.div>
-                </motion.div>
+                {/* 里程碑标记 - 简化为一行小字 */}
+                <div className="mb-2">
+                  <span className="text-xs font-bold text-red-500">● {blessing.count} ●</span>
+                </div>
 
-                {/* 标题 */}
-                <h3 className="text-xl md:text-2xl font-bold mb-4" style={{ 
+                {/* 标题 - 更小 */}
+                <h3 className="text-sm md:text-base font-bold mb-2" style={{
                   fontFamily: "'STKaiti', 'KaiTi', serif",
                   background: 'linear-gradient(135deg, #d97706, #b91c1c)',
                   WebkitBackgroundClip: 'text',
@@ -140,23 +210,21 @@ export default function BlessingPopup() {
                   {blessing.title}
                 </h3>
 
-                {/* 祝福语 */}
-                <p className="text-sm md:text-base font-semibold text-amber-900 mb-3 blessing-serif">
+                {/* 祝福语 - 更小 */}
+                <p className="text-xs md:text-sm font-medium text-amber-900 mb-2 blessing-serif leading-tight">
                   {parsed.blessing}
                 </p>
 
-                {/* 解释文案 */}
+                {/* 解释文案 - 可选 */}
                 {parsed.explanation && (
-                  <p className="text-xs md:text-sm leading-relaxed text-gray-600 mb-4 blessing-serif opacity-85">
+                  <p className="text-xs leading-tight text-gray-600 mb-2 blessing-serif opacity-80">
                     {parsed.explanation}
                   </p>
                 )}
-
-
               </div>
 
-              {/* 底部装饰条纹 */}
-              <div className="h-1 bg-gradient-to-r from-amber-400 via-red-400 to-amber-400"></div>
+              {/* 底部装饰条纹 - 更小 */}
+              <div className="h-0.5 bg-gradient-to-r from-amber-400 via-red-400 to-amber-400"></div>
             </div>
           </motion.div>
         </>

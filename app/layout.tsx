@@ -5,6 +5,9 @@ import BlessingPopup from './components/Blessing/BlessingPopup'
 export const metadata: Metadata = {
   title: '丙午马年 虔诚祈福',
   description: '一念虔诚，福报自来',
+  icons: {
+    icon: '/icon.png',
+  },
 }
 
 export default function RootLayout({
