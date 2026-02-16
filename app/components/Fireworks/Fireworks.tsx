@@ -46,12 +46,16 @@ export default function Fireworks() {
 
     // Initial bursts
     for(let i=0; i<5; i++) {
-        setTimeout(() => createExplosion(Math.random() * canvas.width, Math.random() * canvas.height * 0.5), i * 300)
+        setTimeout(() => {
+          if (!canvas) return
+          createExplosion(Math.random() * canvas.width, Math.random() * canvas.height * 0.5)
+        }, i * 300)
     }
 
     function animate() {
-      ctx!.fillStyle = 'rgba(0,0,0,0.1)';
-      ctx!.fillRect(0, 0, canvas.width, canvas.height);
+      if (!canvas || !ctx) return
+      ctx.fillStyle = 'rgba(0,0,0,0.1)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
       
       for (let i = particles.length - 1; i >= 0; i--) {
         particles[i].update();
