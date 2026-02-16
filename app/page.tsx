@@ -5,14 +5,17 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { usePrayerStore } from '@/lib/store'
 import { FloatingText } from '@/app/components/FloatingText/FloatingText'
 import { FloatingMessage } from '@/lib/types'
+import Fireworks from '@/app/components/Fireworks/Fireworks'
 
 export default function Home() {
   const { count, increment } = usePrayerStore()
   const [floatingMessages, setFloatingMessages] = useState<FloatingMessage[]>([])
   const [isAutoClicking, setIsAutoClicking] = useState(false)
   const [showTooltip, setShowTooltip] = useState(false)
+  const [fireworks, setFireworks] = useState<Array<{ id: number; x: number; y: number; trigger: number }>>([])
   const clickCountRef = useRef(0) // 本地点击计数
   const nextBlessingRef = useRef(Math.floor(Math.random() * 5) + 4) // 首次4-8次按下时触发
+  const nextFireworksRef = useRef(Math.floor(Math.random() * 3) + 2) // 首次2-4次点击触发烟花
   const autoClickIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const autoClickCountRef = useRef(0) // 自动敲击次数
 
@@ -98,6 +101,26 @@ export default function Home() {
     const rect = targetEl?.getBoundingClientRect() ?? { left: 0, top: 0 }
     const relX = clientX - rect.left
     const relY = clientY - rect.top
+
+    // 随机触发烟花 - 每2-4次点击一次，多个位置同时爆炸
+    if (clickCountRef.current >= nextFireworksRef.current) {
+      const fireworkCount = 3 // 一次触发3个烟花
+      const newFireworks: Array<{ id: number; x: number; y: number; trigger: number }> = []
+      
+      for (let i = 0; i < fireworkCount; i++) {
+        const randomX = Math.random() * window.innerWidth
+        const randomY = Math.random() * (window.innerHeight * 0.6) // 上半部分
+        newFireworks.push({
+          id: Date.now() + i,
+          x: randomX,
+          y: randomY,
+          trigger: Date.now() + i
+        })
+      }
+      
+      setFireworks(newFireworks)
+      nextFireworksRef.current = clickCountRef.current + Math.floor(Math.random() * 3) + 2 // 下一次2-4次点击后
+    }
 
     // Emit 1 random "+1" feedback 
     const blessingPrefixes = [
@@ -205,6 +228,11 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Fireworks */}
+      {fireworks.map((fw) => (
+        <Fireworks key={fw.id} trigger={fw.trigger} x={fw.x} y={fw.y} />
+      ))}
+
       {/* Bell Area */}
       <div className="flex-1 flex items-center justify-center w-full relative z-20">
         <button 
@@ -232,16 +260,6 @@ export default function Home() {
             <FloatingText key={msg.id} {...msg} />
           ))}
         </AnimatePresence>
-
-        {/* Milestone Effects */}
-        {count > 0 && count % 10 === 0 && (
-             <motion.div 
-               initial={{ opacity: 0 }}
-               animate={{ opacity: [0, 1, 0] }}
-               transition={{ duration: 1 }}
-               className="absolute inset-0 bg-yellow-400/10 pointer-events-none z-0"
-             />
-        )}
       </div>
 
       {/* 自动点击按钮 */}

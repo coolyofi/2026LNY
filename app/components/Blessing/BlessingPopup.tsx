@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePrayerStore } from '../../../lib/store'
 import { nearestBlessingAtOrBelow, isImportantMilestone } from '../../../lib/blessings'
-import Fireworks from '../Fireworks/Fireworks'
 
 interface CardPosition {
   top: string
@@ -69,15 +68,13 @@ export default function BlessingPopup() {
     return (
       <AnimatePresence>
         {visible && blessing && (
-          <>
-            <Fireworks />
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setVisible(false)}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm cursor-pointer"
-            >
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setVisible(false)}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm cursor-pointer"
+          >
               <motion.div
                 key={`milestone-${blessing.count}`}
                 initial={{ scale: 0.5, y: 40 }}
@@ -152,7 +149,6 @@ export default function BlessingPopup() {
                 </div>
               </motion.div>
             </motion.div>
-          </>
         )}
       </AnimatePresence>
     )
@@ -162,21 +158,19 @@ export default function BlessingPopup() {
   return (
     <AnimatePresence>
       {visible && blessing && (
-        <>
-          <Fireworks />
-          <motion.div
-            key={`blessing-${blessing.count}`}
-            initial={{ opacity: 0, scale: 0.3, rotate: -8, y: 30 }}
-            animate={{ opacity: 1, scale: 1, rotate: 0, y: 0 }}
-            exit={{ opacity: 0, scale: 0.2, rotate: 8, y: -50 }}
-            transition={{
-              type: 'spring',
-              stiffness: 200,
-              damping: 15,
-              duration: 0.6
-            }}
-            className="fixed pointer-events-none z-50"
-            style={{
+        <motion.div
+          key={`blessing-${blessing.count}`}
+          initial={{ opacity: 0, scale: 0.3, rotate: -8, y: 30 }}
+          animate={{ opacity: 1, scale: 1, rotate: 0, y: 0 }}
+          exit={{ opacity: 0, scale: 0.2, rotate: 8, y: -50 }}
+          transition={{
+            type: 'spring',
+            stiffness: 200,
+            damping: 15,
+            duration: 0.6
+          }}
+          className="fixed pointer-events-none z-50"
+          style={{
               top: position.top,
               left: position.left,
               right: position.right,
@@ -225,7 +219,6 @@ export default function BlessingPopup() {
               <div className="h-0.5 bg-gradient-to-r from-amber-400 via-red-400 to-amber-400"></div>
             </div>
           </motion.div>
-        </>
       )}
     </AnimatePresence>
   )

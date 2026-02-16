@@ -43,15 +43,6 @@ export default function Bell({ count, onClick }: BellProps) {
     >
       <span className="relative inline-block">
         🧧
-        {/* Shine effect for milestones */}
-        {count > 0 && count % 10 === 0 && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: [0, 1, 0], scale: [0, 1.5, 2] }}
-            transition={{ duration: 0.8 }}
-            className="absolute inset-0 bg-yellow-400 rounded-full blur-3xl -z-10"
-          />
-        )}
       </span>
     </motion.div>
   )
