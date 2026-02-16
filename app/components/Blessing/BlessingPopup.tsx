@@ -19,6 +19,14 @@ export default function BlessingPopup() {
   const [isImportant, setIsImportant] = useState(false)
   const lastShown = useRef<number | null>(null)
 
+  // 初始化 lastShown 从 localStorage
+  useEffect(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('lastShownBlessing') : null
+    if (saved) {
+      lastShown.current = parseInt(saved, 10)
+    }
+  }, [])
+
   // 解析祝福文案为祝福语和解释
   const parseMessage = (message: string) => {
     const match = message.match(/^(.*?。)(.*)$/)
@@ -40,6 +48,11 @@ export default function BlessingPopup() {
     if (lastShown.current === b.count) return
 
     lastShown.current = b.count
+    // 保存到 localStorage，以便页面刷新后也能记忆
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lastShownBlessing', b.count.toString())
+    }
+    
     const important = isImportantMilestone(b.count)
     setBlessing(b)
     setIsImportant(important)
