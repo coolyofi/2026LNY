@@ -15,15 +15,12 @@ export default function Home() {
   const [floatingMessages, setFloatingMessages] = useState<FloatingMessage[]>([])
   const [showGrandFinale, setShowGrandFinale] = useState(false)
 
-  // 1. 多语言/多层级的“好运加一”表达 (赛博木鱼升级版)
+  // 1. 赛博敲击反馈：各种“XX +1”
   const additionExpressions = useMemo(() => [
-    "好运 +1", "福气 +1", "Merit +1", "Luck +1", "Fortune +1",
-    "幸運 +1", "加福 +1", "福運 +1", "Blessing +1", "Karma +1",
-    "Positividad +1", "幸運な +1", "Bonheur +1", "Sorte +1", "Glück +1",
-    "Prosperidad +1", "Success +1", "Abundance +1", "Peace +1", "Joy +1",
-    "鸿运 +1", "财气 +1", "喜气 +1", "元气 +1", "智慧 +1",
-    "건강 +1", "행복 +1", "财富 +1", "顺利 +1", "吉利 +1",
-    "健康 +1", "平安 +1", "顺遂 +1", "马力 +1", "锦鲤 +1"
+    "好运 +1", "福气 +1", "功德 +1", "财气 +1", "喜气 +1",
+    "万福 +1", "吉利 +1", "顺利 +1", "健康 +1", "平安 +1",
+    "马力 +1", "锦鲤 +1", "元气 +1", "灵气 +1", "欧气 +1",
+    "加薪 +1", "暴富 +1", "脱单 +1", "上榜 +1", "满分 +1"
   ], [])
 
   const blessingWords = useMemo(() => [

@@ -11,38 +11,24 @@ interface BellProps {
 const auspiciousEmojis = ['🔔', '🧧', '🐎', '🍊', '🏮', '🎆']
 
 export default function Bell({ count, onClick }: BellProps) {
-  const [currentEmoji, setCurrentEmoji] = useState('🔔')
-
-  useEffect(() => {
-    // Randomize emoji every 10 clicks or just keep it dynamic
-    if (count % 10 === 0) {
-      setCurrentEmoji(auspiciousEmojis[Math.floor(Math.random() * auspiciousEmojis.length)])
-    }
-  }, [count])
+  // 按照用户需求，固定为红包图标，不再随机切换
+  const currentEmoji = '🧧'
 
   return (
     <motion.div
       whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.9 }}
-      animate={
-        count > 0 && count % 10 === 0
-          ? {
-              scale: [1, 1.3, 0.9, 1.1, 1],
-              rotate: [0, 15, -15, 5, 0],
-              filter: [
-                'drop-shadow(0 0 20px rgba(255,207,77,0.4))',
-                'drop-shadow(0 0 50px rgba(255,207,77,0.8))',
-                'drop-shadow(0 0 20px rgba(255,207,77,0.4))'
-              ]
-            }
-          : {
-              scale: [1, 1.05, 1],
-            }
-      }
-      transition={{ duration: 0.3 }}
-      className="relative z-10 cursor-pointer select-none text-[150px] md:text-[200px]"
+      whileTap={{ scale: 0.95 }}
+      animate={{
+        scale: [1, 1.1, 1],
+      }}
+      transition={{ 
+        duration: 0.1,
+        type: "spring",
+        stiffness: 300
+      }}
+      className="relative z-10 cursor-pointer select-none text-[160px] md:text-[220px]"
       style={{
-        filter: 'drop-shadow(0 0 30px rgba(255,207,77,0.4))',
+        filter: 'drop-shadow(0 0 40px rgba(212,0,0,0.6))',
       }}
       onMouseDown={(e) => onClick(e)}
       onTouchStart={(e) => {
