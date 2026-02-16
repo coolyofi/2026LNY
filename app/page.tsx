@@ -49,41 +49,50 @@ export default function Home() {
 
   const handleHit = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     increment()
-    
-    // Get coordinates
-    let clientX, clientY;
+
+    // Get viewport coords
+    let clientX: number, clientY: number
     if ('touches' in e) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
+      clientX = e.touches[0].clientX
+      clientY = e.touches[0].clientY
     } else {
-      clientX = e.clientX;
-      clientY = e.clientY;
+      clientX = e.clientX
+      clientY = e.clientY
     }
 
-    // 同时生成两种文字：一种是点击反馈，一种是环境祝福
-    const feedbackMsg: FloatingMessage = {
-      id: Date.now(),
-      text: additionExpressions[Math.floor(Math.random() * additionExpressions.length)],
-      x: clientX,
-      y: clientY,
-      color: "#FFFFFF",
+    // Find bell bounding rect to convert to container-local coords
+    const targetEl = (e.target as Element)?.closest?.('.bell-root') as HTMLElement | null
+    const rect = targetEl?.getBoundingClientRect() ?? { left: 0, top: 0 }
+    const relX = clientX - rect.left
+    const relY = clientY - rect.top
+
+    // Emit multiple small "+1" feedbacks stacked on the bell
+    const now = Date.now()
+    const feedbacks: FloatingMessage[] = Array.from({ length: 4 }).map((_, i) => ({
+      id: now + i,
+      text: '+1',
+      x: relX + (i - 1.5) * 8, // slight horizontal spread
+      y: relY - i * 6, // slight vertical offset between them
+      color: '#FFFFFF',
       type: 'feedback'
-    }
+    }))
 
+    // Environment blessing (drifts slowly)
     const blessingMsg: FloatingMessage = {
-      id: Date.now() + 1,
+      id: now + 1000,
       text: blessingWords[Math.floor(Math.random() * blessingWords.length)],
-      x: clientX, // starting point if environment uses it
-      y: clientY,
+      x: relX,
+      y: relY,
       color: colors[Math.floor(Math.random() * colors.length)],
       type: 'environment'
     }
-    
-    setFloatingMessages(prev => [...prev.slice(-40), feedbackMsg, blessingMsg])
-    
+
+    setFloatingMessages(prev => [...prev.slice(-40), ...feedbacks, blessingMsg])
+
+    // remove them after a while
     setTimeout(() => {
-      setFloatingMessages(prev => prev.filter(msg => msg.id !== feedbackMsg.id && msg.id !== blessingMsg.id))
-    }, 6000) // Increased timeout for longer environment drift
+      setFloatingMessages(prev => prev.filter(msg => !feedbacks.some(f => f.id === msg.id) && msg.id !== blessingMsg.id))
+    }, 6000)
 
     if ((count + 1) % 100 === 0) {
       setShowGrandFinale(true)

@@ -14,33 +14,22 @@ export function FloatingText({ text, x, y, color, type = 'feedback' }: FloatingT
   const isFeedback = type === 'feedback'
   
   // Feedback style: floats up quickly, stays near click
-  const duration = isFeedback ? 1.0 : 5 + Math.random() * 3
+  const duration = isFeedback ? 1.0 + Math.random() * 0.6 : 6 + Math.random() * 3
 
   return (
     <motion.div
-      initial={{ 
-        opacity: 0, 
-        y: isFeedback ? y - 50 : (Math.random() * 800 - 400), 
-        x: isFeedback ? x - 40 : (Math.random() > 0.5 ? -300 : 1300),
-        scale: isFeedback ? 0.8 : 1,
-      }}
-      animate={{ 
-        opacity: [0, 1, 1, 0], 
-        y: isFeedback ? y - 250 : undefined,
-        x: isFeedback ? x - 40 : (Math.random() > 0.5 ? 1500 : -500),
-        scale: isFeedback ? [0.8, 1.5, 1.2] : [1, 1.2, 1],
-      }}
-      transition={{ 
-        duration: duration, 
-        ease: isFeedback ? [0.22, 1, 0.36, 1] : "linear",
-      }}
-      className={`absolute pointer-events-none whitespace-nowrap font-bold z-20 ${
-        isFeedback ? 'text-2xl md:text-4xl' : 'text-3xl md:text-5xl opacity-20 italic'
-      }`}
-      style={{ 
-        color: color, 
+      initial={{ opacity: 0, y: 0, scale: isFeedback ? 0.9 : 1 }}
+      animate={{ opacity: [0, 1, 1, 0], y: isFeedback ? -80 + (Math.random() * -20) : -200 + Math.random() * -200, scale: isFeedback ? [0.9, 1.15, 0.95] : [1, 1.1, 1] }}
+      transition={{ duration: duration, ease: isFeedback ? [0.22, 1, 0.36, 1] : 'linear' }}
+      className={`absolute pointer-events-none whitespace-nowrap font-bold z-20 ${isFeedback ? 'text-2xl md:text-4xl' : 'text-3xl md:text-5xl opacity-20 italic'}`}
+      style={{
+        left: x,
+        top: y,
+        transformOrigin: 'center',
+        color: color,
         textShadow: `0 0 15px ${color}`,
-        fontFamily: "'STKaiti', 'KaiTi', serif"
+        fontFamily: "'STKaiti', 'KaiTi', serif",
+        filter: isFeedback ? 'blur(0px)' : 'blur(2px)'
       }}
     >
       {text}

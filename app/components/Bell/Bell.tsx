@@ -26,7 +26,7 @@ export default function Bell({ count, onClick }: BellProps) {
         type: "spring",
         stiffness: 300
       }}
-      className="relative z-10 cursor-pointer select-none text-[160px] md:text-[220px]"
+      className="relative z-10 cursor-pointer select-none text-[160px] md:text-[220px] bell-root"
       style={{
         filter: 'drop-shadow(0 0 40px rgba(212,0,0,0.6))',
       }}
