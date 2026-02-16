@@ -1,1 +1,47 @@
-node_modules
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+/test-results
+
+# Next.js
+/.next/
+/out/
+/.vercel/
+
+# Production
+/build/
+/dist/
+
+# Misc
+.DS_Store
+*.pem
+*.log
+*.log.gz
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Local env files
+.env
+.env.local
+.env.*.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+*.sublime-*
+
+# Temporary
+tmp/
+temp/

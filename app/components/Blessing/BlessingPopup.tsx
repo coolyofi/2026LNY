@@ -19,6 +19,21 @@ export default function BlessingPopup() {
   const [position, setPosition] = useState<CardPosition>({ top: '20%', left: '10%' })
   const lastShown = useRef<number | null>(null)
 
+  // 解析祝福文案为祝福语和解释
+  const parseMessage = (message: string) => {
+    const match = message.match(/^(.*?。)(.*)$/)
+    if (match) {
+      return {
+        blessing: match[1].trim(),
+        explanation: match[2].trim()
+      }
+    }
+    return {
+      blessing: message,
+      explanation: ''
+    }
+  }
+
   useEffect(() => {
     const b = findBlessing(count)
     if (!b) return
@@ -28,7 +43,6 @@ export default function BlessingPopup() {
     setBlessing(b)
     setVisible(true)
 
-    // 随机位置：上下左右四个角落和边缘
     const positions: CardPosition[] = [
       { top: '15%', left: '8%' },
       { top: '15%', right: '8%', left: 'auto' },
@@ -39,9 +53,11 @@ export default function BlessingPopup() {
     ]
     setPosition(positions[Math.floor(Math.random() * positions.length)])
 
-    const t = setTimeout(() => setVisible(false), 2800)
+    const t = setTimeout(() => setVisible(false), 5000)
     return () => clearTimeout(t)
   }, [count])
+
+  const parsed = blessing ? parseMessage(blessing.message) : { blessing: '', explanation: '' }
 
   return (
     <AnimatePresence>
@@ -83,19 +99,38 @@ export default function BlessingPopup() {
                 <div className="absolute top-3 left-3 w-8 h-8 border-l-2 border-t-2 border-amber-300/60"></div>
                 <div className="absolute bottom-3 right-3 w-8 h-8 border-r-2 border-b-2 border-amber-300/60"></div>
 
-                {/* 里程碑数字徽章 */}
+                {/* 里程碑数字徽章（禅意动画） */}
                 <motion.div 
-                  animate={{ scale: [1, 1.15, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="inline-block mb-2"
+                  className="inline-block mb-4"
                 >
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                    {blessing.count}
-                  </div>
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.05, 1],
+                      opacity: [0.8, 1, 0.8],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: 'easeInOut'
+                    }}
+                    className="relative w-16 h-16"
+                  >
+                    {/* 禅意外圈光晕 */}
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                      className="absolute inset-0 rounded-full border border-red-300/30"
+                    />
+                    
+                    {/* 中间数字 */}
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                      {blessing.count}
+                    </div>
+                  </motion.div>
                 </motion.div>
 
                 {/* 标题 */}
-                <h3 className="text-xl md:text-2xl font-bold mb-2" style={{ 
+                <h3 className="text-xl md:text-2xl font-bold mb-4" style={{ 
                   fontFamily: "'STKaiti', 'KaiTi', serif",
                   background: 'linear-gradient(135deg, #d97706, #b91c1c)',
                   WebkitBackgroundClip: 'text',
@@ -105,26 +140,19 @@ export default function BlessingPopup() {
                   {blessing.title}
                 </h3>
 
-                {/* 祝福文案 */}
-                <p className="text-sm md:text-base leading-relaxed text-gray-700 mb-3 whitespace-pre-wrap max-h-24 overflow-hidden blessing-serif">
-                  {blessing.message}
+                {/* 祝福语 */}
+                <p className="text-sm md:text-base font-semibold text-amber-900 mb-3 blessing-serif">
+                  {parsed.blessing}
                 </p>
 
-                {/* 底部装饰 */}
-                <div className="flex justify-center gap-2 mb-2">
-                  <span className="text-lg">🎊</span>
-                  <span className="text-lg">✨</span>
-                  <span className="text-lg">🎊</span>
-                </div>
+                {/* 解释文案 */}
+                {parsed.explanation && (
+                  <p className="text-xs md:text-sm leading-relaxed text-gray-600 mb-4 blessing-serif opacity-85">
+                    {parsed.explanation}
+                  </p>
+                )}
 
-                {/* 次级文本 */}
-                <motion.p 
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="text-xs md:text-sm text-amber-700/70 italic"
-                >
-                  里程碑已达成
-                </motion.p>
+
               </div>
 
               {/* 底部装饰条纹 */}

@@ -125,7 +125,7 @@ export default function Home() {
       {/* Header */}
       <div className="mt-12 text-center z-10">
         <h2 className="text-xl md:text-2xl tracking-[0.3em] font-medium opacity-80 mb-2 blessing-calligraphy">
-          2026 丙午马年 · 虔诚祈福
+          丙午马年 · 虔诚祈福
         </h2>
         <div className="text-6xl md:text-8xl font-bold text-gold-glow tracking-tighter">
           {count}
