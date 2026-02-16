@@ -1,9 +1,10 @@
 import './globals.css'
 import type { Metadata } from 'next'
+import BlessingPopup from './components/Blessing/BlessingPopup'
 
 export const metadata: Metadata = {
-  title: '2026 丙午马年 · 赛博开运钟',
-  description: '敲响新年金钟，积攒万福金安',
+  title: '丙午马年 虔诚祈福',
+  description: '一念虔诚，福报自来',
 }
 
 export default function RootLayout({
@@ -13,7 +14,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <body>
+        {children}
+        <BlessingPopup />
+      </body>
     </html>
   )
 }

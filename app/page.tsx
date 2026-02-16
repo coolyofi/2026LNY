@@ -66,33 +66,51 @@ export default function Home() {
     const relX = clientX - rect.left
     const relY = clientY - rect.top
 
-    // Emit multiple small "+1" feedbacks stacked on the bell
+    // Emit 1-3 random "+1" feedbacks 
     const now = Date.now()
-    const feedbacks: FloatingMessage[] = Array.from({ length: 4 }).map((_, i) => ({
+    const blessingPrefixes = [
+      '好运', '福气', '功德', '财气', '喜气',
+      '万福', '吉利', '顺利', '健康', '平安',
+      '马力', '锦鲤', '元气', '灵气', '欧气',
+      '加薪', '暴富', '脱单', '上榜', '满分'
+    ]
+    
+    // Generate 1-3 random feedbacks instead of 20
+    const numFeedbacks = Math.floor(Math.random() * 3) + 1
+    const feedbacks: FloatingMessage[] = Array.from({ length: numFeedbacks }).map((_, i) => ({
       id: now + i,
-      text: '+1',
-      x: relX + (i - 1.5) * 8, // slight horizontal spread
-      y: relY - i * 6, // slight vertical offset between them
+      text: `${blessingPrefixes[Math.floor(Math.random() * blessingPrefixes.length)]} +1`,
+      x: relX,
+      y: relY + i * 35, // offset vertically to avoid stacking
       color: '#FFFFFF',
       type: 'feedback'
     }))
 
-    // Environment blessing (drifts slowly)
-    const blessingMsg: FloatingMessage = {
-      id: now + 1000,
-      text: blessingWords[Math.floor(Math.random() * blessingWords.length)],
-      x: relX,
-      y: relY,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      type: 'environment'
+    // Randomly generate environment blessings (30% chance, not every click)
+    const shouldShowBlessing = Math.random() < 0.35
+    const blessingMsgs: FloatingMessage[] = []
+    
+    if (shouldShowBlessing) {
+      // Generate 2-3 blessing words for subtitle effect
+      const numBlessings = Math.floor(Math.random() * 2) + 2 // 2 or 3
+      for (let i = 0; i < numBlessings; i++) {
+        blessingMsgs.push({
+          id: now + 1000 + i,
+          text: blessingWords[Math.floor(Math.random() * blessingWords.length)],
+          x: relX,
+          y: relY + i * 50, // stack vertically for subtitle effect
+          color: colors[Math.floor(Math.random() * colors.length)],
+          type: 'environment'
+        })
+      }
     }
 
-    setFloatingMessages(prev => [...prev.slice(-40), ...feedbacks, blessingMsg])
+    setFloatingMessages(prev => [...prev.slice(-50), ...feedbacks, ...blessingMsgs])
 
     // remove them after a while
     setTimeout(() => {
-      setFloatingMessages(prev => prev.filter(msg => !feedbacks.some(f => f.id === msg.id) && msg.id !== blessingMsg.id))
-    }, 6000)
+      setFloatingMessages(prev => prev.filter(msg => !feedbacks.some(f => f.id === msg.id) && !blessingMsgs.some(b => b.id === msg.id)))
+    }, 8000)
 
     if ((count + 1) % 100 === 0) {
       setShowGrandFinale(true)
@@ -106,8 +124,8 @@ export default function Home() {
 
       {/* Header */}
       <div className="mt-12 text-center z-10">
-        <h2 className="text-xl md:text-2xl tracking-[0.3em] font-medium opacity-80 mb-2">
-          2026 丙午马年 · 福感积累
+        <h2 className="text-xl md:text-2xl tracking-[0.3em] font-medium opacity-80 mb-2 blessing-calligraphy">
+          2026 丙午马年 · 虔诚祈福
         </h2>
         <div className="text-6xl md:text-8xl font-bold text-gold-glow tracking-tighter">
           {count}
@@ -140,7 +158,7 @@ export default function Home() {
       <div className="mb-12 text-center z-10">
         <div className="px-6 py-3 bg-black/30 backdrop-blur-md rounded-full border border-white/10">
           <p className="text-sm md:text-base tracking-widest opacity-60">
-            诚心点击，必有好运 | 当前已开启实时祈福
+            一念虔诚，福报自来 | 每一次敲击，都是祈愿
           </p>
         </div>
       </div>
@@ -162,12 +180,12 @@ export default function Home() {
                 className="bg-[#8b0000] border-4 border-yellow-500 p-8 md:p-12 rounded-3xl text-center shadow-[0_0_50px_rgba(255,207,77,0.5)] max-w-md w-full"
               >
                 <div className="text-6xl mb-6">🐎💨</div>
-                <h3 className="text-3xl font-bold text-yellow-400 mb-4">十全十美 · 功德圆满</h3>
+                <h3 className="text-3xl font-bold text-yellow-400 mb-4">百折祈愿 · 福报正堂</h3>
                 <p className="text-lg leading-relaxed mb-8 opacity-90">
-                  福满乾坤，气贯长虹！<br/>
-                  恭喜你在 2026 积累了 100 份福报。<br/>
-                  新的一年，愿你万事马力全开，<br/>
-                  前程锦绣，好运势不可挡！
+                  百番虔诚，福运正堂。<br/>
+                  恭喜你的 100 次祈福之心。<br/>
+                  新年新机，马年扬帆，<br/>
+                  祝你福泽绵长，好运如影随形。
                 </p>
                 <button
                   onClick={() => { setShowGrandFinale(false); reset(); }}

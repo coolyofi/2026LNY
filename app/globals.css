@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,6 +9,7 @@
   --gold: #ffcf4d;
   --red-deep: #8b0000;
   --red-bright: #d40000;
+  --serif: 'Noto Serif SC', 'STZhongsong', serif;
 }
 
 body {
@@ -43,4 +47,17 @@ body::before {
 .text-gold-glow {
   animation: gold-glow 2s infinite;
   color: var(--gold);
+}
+
+.blessing-serif {
+  font-family: var(--serif);
+  font-weight: 400;
+  letter-spacing: 0.05em;
+}
+
+/* Calligraphy style for the main blessing header */
+.blessing-calligraphy {
+  font-family: 'Ma Shan Zheng', 'Noto Serif SC', 'STZhongsong', serif;
+  font-weight: 400;
+  letter-spacing: 0.18em;
 }
