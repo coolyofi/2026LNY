@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo, useRef } from 'react'
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePrayerStore } from '@/lib/store'
 import { FloatingText } from '@/app/components/FloatingText/FloatingText'
@@ -9,8 +9,12 @@ import { FloatingMessage } from '@/lib/types'
 export default function Home() {
   const { count, increment } = usePrayerStore()
   const [floatingMessages, setFloatingMessages] = useState<FloatingMessage[]>([])
+  const [isAutoClicking, setIsAutoClicking] = useState(false)
+  const [showTooltip, setShowTooltip] = useState(false)
   const clickCountRef = useRef(0) // 本地点击计数
   const nextBlessingRef = useRef(Math.floor(Math.random() * 5) + 4) // 首次4-8次按下时触发
+  const autoClickIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const autoClickCountRef = useRef(0) // 自动敲击次数
 
   const blessingWords = useMemo(() => [
     "福满乾坤", "马到成功", "万事大吉", "财源滚滚", "心想事成",
@@ -36,9 +40,48 @@ export default function Home() {
 
   const colors = ['#FFD700', '#FFAA00', '#FFEB3B', '#FF9800', '#FFC107', '#FF5722']
 
+  // 创建全局 AudioContext（重用，避免资源耗尽）
+  const audioContextRef = useRef<AudioContext | null>(null)
+
+  const playClickSound = useCallback(() => {
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+      }
+      
+      const audioContext = audioContextRef.current
+      
+      // 如果 context 被暂停，恢复它
+      if (audioContext.state === 'suspended') {
+        audioContext.resume()
+      }
+      
+      const oscillator = audioContext.createOscillator()
+      const gain = audioContext.createGain()
+      
+      oscillator.connect(gain)
+      gain.connect(audioContext.destination)
+      
+      // 设置音效参数 - 清脆的"叮"声
+      oscillator.frequency.value = 800
+      oscillator.type = 'sine'
+      
+      gain.gain.setValueAtTime(0.3, audioContext.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1)
+      
+      oscillator.start(audioContext.currentTime)
+      oscillator.stop(audioContext.currentTime + 0.1)
+    } catch (error) {
+      // 浏览器不支持 Web Audio API，静默失败
+    }
+  }, [])
+
   const handleHit = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     increment()
     clickCountRef.current += 1 // 增加本地点击计数
+
+    // 播放点击音效
+    playClickSound()
 
     // Get viewport coords
     let clientX: number, clientY: number
@@ -108,7 +151,44 @@ export default function Home() {
     setTimeout(() => {
       setFloatingMessages(prev => prev.filter(msg => !feedbacks.some(f => f.id === msg.id) && !blessingMsgs.some(b => b.id === msg.id)))
     }, 8000)
-  }, [increment, blessingWords])
+  }, [increment, blessingWords, playClickSound])
+
+  // 自动敲击功能 - 每次点击"自动点"按钮，敲108下然后自动停止
+  useEffect(() => {
+    if (isAutoClicking) {
+      autoClickCountRef.current = 0 // 重置计数
+      autoClickIntervalRef.current = setInterval(() => {
+        // 模拟点击事件
+        const fakeEvent = {
+          clientX: window.innerWidth / 2,
+          clientY: window.innerHeight / 2,
+          target: document.querySelector('.bell-root'),
+          preventDefault: () => {},
+          stopPropagation: () => {}
+        } as any
+        handleHit(fakeEvent)
+        
+        // 增加自动点击计数
+        autoClickCountRef.current += 1
+        
+        // 达到108下后自动停止
+        if (autoClickCountRef.current >= 108) {
+          setIsAutoClicking(false)
+        }
+      }, 600) // 每600ms敲一次，速度适中
+    } else {
+      if (autoClickIntervalRef.current) {
+        clearInterval(autoClickIntervalRef.current)
+        autoClickIntervalRef.current = null
+      }
+    }
+
+    return () => {
+      if (autoClickIntervalRef.current) {
+        clearInterval(autoClickIntervalRef.current)
+      }
+    }
+  }, [isAutoClicking, handleHit])
 
   return (
     <main className="relative flex flex-col items-center justify-between min-h-screen p-4">
@@ -172,6 +252,39 @@ export default function Home() {
           </p>
         </div>
       </div>
+
+      {/* 自动点击按钮 - 右下角 */}
+      <motion.div className="fixed bottom-6 right-6 z-40 group">
+        <motion.button
+          onClick={() => setIsAutoClicking(!isAutoClicking)}
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
+          animate={{
+            backgroundColor: isAutoClicking ? 'rgba(212, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.2)',
+            boxShadow: isAutoClicking ? '0 0 15px rgba(212, 0, 0, 0.6)' : 'none'
+          }}
+          className="px-3 py-1.5 text-xs rounded-full border border-white/30 transition-all hover:border-white/50 opacity-60 hover:opacity-100 z-40"
+        >
+          {isAutoClicking ? '🔴 持诵中' : '⚪ 持诵'}
+        </motion.button>
+        
+        {/* 提示框 */}
+        <AnimatePresence>
+          {showTooltip && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="absolute bottom-full right-0 mb-2 px-4 py-3 bg-red-900/90 text-white text-xs rounded border border-red-400/50 pointer-events-none whitespace-nowrap"
+              style={{ fontFamily: "'STKaiti', 'KaiTi', serif" }}
+            >
+              <div className="font-semibold">一心持诵</div>
+              <div className="text-xs opacity-80 mt-1">一百零八遍 · 消解烦恼</div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
 
     </main>
   )
