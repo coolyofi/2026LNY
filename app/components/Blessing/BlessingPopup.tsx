@@ -18,6 +18,7 @@ export default function BlessingPopup() {
   const [position, setPosition] = useState<CardPosition>({ top: '20%', left: '10%' })
   const [isImportant, setIsImportant] = useState(false)
   const lastShown = useRef<number | null>(null)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // 初始化 lastShown 从 localStorage
   useEffect(() => {
@@ -47,6 +48,12 @@ export default function BlessingPopup() {
     if (!b) return
     if (lastShown.current === b.count) return
 
+    // 清理之前的 timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
+
     lastShown.current = b.count
     // 保存到 localStorage，以便页面刷新后也能记忆
     if (typeof window !== 'undefined') {
@@ -70,8 +77,18 @@ export default function BlessingPopup() {
 
     // 重要里程碑显示4秒，非重要里程碑显示5秒
     const displayTime = important ? 4000 : 5000
-    const t = setTimeout(() => setVisible(false), displayTime)
-    return () => clearTimeout(t)
+    timeoutRef.current = setTimeout(() => {
+      setVisible(false)
+      timeoutRef.current = null
+    }, displayTime)
+
+    // 组件卸载或新的 blessing 出现时清理
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+        timeoutRef.current = null
+      }
+    }
   }, [count])
 
   const parsed = blessing ? parseMessage(blessing.message) : { blessing: '', explanation: '' }

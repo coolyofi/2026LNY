@@ -21,7 +21,40 @@ export default function Fireworks({ x, y, trigger }: FireworksProps) {
     canvas.height = window.innerHeight
 
     const particles: any[] = []
-    const colors = ['#FFD700', '#FFA500', '#FF6347', '#FF1493', '#FF69B4', '#FFFF00', '#FF8C00']
+    
+    // 分类色板 - 红金橙系为主
+    const colorPalettes = {
+      classic: [
+        // 金色系
+        '#FFD700', '#FFC700', '#FFBB00',
+        // 红色系
+        '#FF4500', '#FF6347', '#FF5722', '#DC143C', '#E63946',
+        // 橙色系
+        '#FF8C00', '#FF7F00', '#FFA500',
+        // 亮色点缀
+        '#FFEB3B', '#FFE082', '#FFD54F'
+      ],
+      celestial: [
+        // 明亮的金铜色
+        '#FFEAA7', '#FFD93D', '#F39C12',
+        // 深红色
+        '#BD3039', '#C0392B', '#D42426',
+        // 橙红色
+        '#E54B2B', '#FF7043', '#FF8A50'
+      ],
+      warm: [
+        // 暖金色
+        '#FDD835', '#FBC02D', '#FFB300',
+        // 热红色
+        '#FF6F00', '#FF5722', '#E64A19',
+        // 火焰色
+        '#FFAB40', '#FFA726', '#FB8C00'
+      ]
+    }
+
+    // 根据浏览器窗口宽度随机选择色板（保持一致性但有变化）
+    const paletteIndex = Math.floor(window.innerWidth / 300) % Object.keys(colorPalettes).length
+    const selectedPalette = Object.values(colorPalettes)[paletteIndex]
 
     // 烟花类型枚举
     enum FireworkType {
@@ -66,7 +99,20 @@ export default function Fireworks({ x, y, trigger }: FireworksProps) {
         this.vy = Math.sin(angle) * speed
         this.alpha = 1
         this.life = 0.93 + Math.random() * 0.06
-        this.size = 2 + Math.random() * 4
+        
+        // 烟雾粒子更小，主要粒子有尺寸变化
+        if (color.includes('rgba')) {
+          this.size = 1 + Math.random() * 2 // 烟雾粒子更小
+        } else {
+          // 主粒子尺寸分布更自然：更多小粒子，少数大粒子
+          const sizeRandom = Math.random()
+          if (sizeRandom < 0.7) {
+            this.size = 1 + Math.random() * 3 // 70% 小粒子
+          } else {
+            this.size = 3 + Math.random() * 5 // 30% 中大粒子
+          }
+        }
+        
         this.gravity = type === FireworkType.TRAIL ? 0.15 : 0.06 + Math.random() * 0.05
       }
 
@@ -75,19 +121,27 @@ export default function Fireworks({ x, y, trigger }: FireworksProps) {
         ctx!.globalAlpha = this.alpha
         ctx!.fillStyle = this.color
         
+        // 是否为烟雾粒子
+        const isSmoke = this.color.includes('rgba')
+        
         // 不同类型的视觉效果
-        if (this.type === FireworkType.TRAIL) {
-          // 流星有发光效果
+        if (isSmoke) {
+          // 烟雾无光晕
+          ctx!.shadowBlur = 0
+        } else if (this.type === FireworkType.TRAIL) {
+          // 流星有强烈发光效果
           ctx!.shadowColor = this.color
-          ctx!.shadowBlur = 12
+          ctx!.shadowBlur = 15
+          ctx!.shadowOffsetX = 0
+          ctx!.shadowOffsetY = 0
         } else if (this.type === FireworkType.SCATTER) {
           // 散射星火有轻微发光
           ctx!.shadowColor = this.color
-          ctx!.shadowBlur = 4
+          ctx!.shadowBlur = 6
         } else {
-          // 正常爆炸效果
+          // 正常爆炸效果 - 金红色系有更强的辉光
           ctx!.shadowColor = this.color
-          ctx!.shadowBlur = 8
+          ctx!.shadowBlur = 10
         }
         
         ctx!.beginPath()
@@ -111,22 +165,38 @@ export default function Fireworks({ x, y, trigger }: FireworksProps) {
       
       switch (type) {
         case FireworkType.BURST:
-          burstCount = 150 + Math.floor(Math.random() * 100)
+          burstCount = 200 + Math.floor(Math.random() * 130)
           break
         case FireworkType.RING:
-          burstCount = 80 + Math.floor(Math.random() * 60)
+          burstCount = 120 + Math.floor(Math.random() * 90)
           break
         case FireworkType.TRAIL:
-          burstCount = 100 + Math.floor(Math.random() * 80)
+          burstCount = 150 + Math.floor(Math.random() * 120)
           break
         case FireworkType.SCATTER:
-          burstCount = 200 + Math.floor(Math.random() * 150)
+          burstCount = 300 + Math.floor(Math.random() * 200)
           break
       }
       
       for (let i = 0; i < burstCount; i++) {
-        const color = colors[Math.floor(Math.random() * colors.length)]
+        // 核心粒子用选中的色板，外围粒子混入烟雾效果
+        let color: string
+        if (Math.random() < 0.12) {
+          // 12% 概率使用烟雾效果（白色/灰色）
+          color = ['rgba(255,255,255,0.4)', 'rgba(255,255,200,0.35)', 'rgba(255,234,167,0.3)'][
+            Math.floor(Math.random() * 3)
+          ]
+        } else {
+          // 88% 使用选中的色板
+          color = selectedPalette[Math.floor(Math.random() * selectedPalette.length)]
+        }
         particles.push(new Particle(posX, posY, color, type))
+      }
+      
+      // 添加额外的小型烟雾粒子，增加逼真感和密度
+      const smokeCount = burstCount * 0.35
+      for (let i = 0; i < smokeCount; i++) {
+        particles.push(new Particle(posX, posY, 'rgba(255,255,255,0.15)', type))
       }
     }
 
