@@ -1,5 +1,6 @@
 import './globals.css'
 import type { Metadata } from 'next'
+import { Analytics } from '@vercel/analytics/next'
 import BlessingPopup from './components/Blessing/BlessingPopup'
 
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ export default function RootLayout({
       <body>
         {children}
         <BlessingPopup />
+        <Analytics />
       </body>
     </html>
   )
