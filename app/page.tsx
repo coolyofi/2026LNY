@@ -244,46 +244,52 @@ export default function Home() {
         )}
       </div>
 
-      {/* Footer */}
-      <div className="mb-10 text-center z-10">
-        <div className="px-4 md:px-6 py-2 md:py-3 bg-black/30 backdrop-blur-md rounded-full border border-white/10">
-          <p className="text-xs md:text-sm tracking-widest opacity-70" style={{ fontFamily: "'STKaiti', 'KaiTi', serif" }}>
-            每一击 · 都是福
-          </p>
-        </div>
-      </div>
+      {/* 自动点击按钮 */}
+        <motion.div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2 text-center pointer-events-none">
+          <div className="relative pointer-events-auto flex flex-col items-center gap-2">
+          <motion.button
+            onClick={() => setIsAutoClicking(!isAutoClicking)}
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+            animate={{
+              backgroundColor: isAutoClicking ? 'rgba(212, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.2)',
+              boxShadow: isAutoClicking ? '0 0 15px rgba(212, 0, 0, 0.6)' : 'none'
+            }}
+            className="flex items-center gap-2 px-4 py-2 text-xs font-semibold tracking-[0.3em] rounded-full border border-white/10 bg-black/30 backdrop-blur-md transition-all opacity-70"
+          >
+            <span
+              aria-hidden
+              className={`w-2 h-2 rounded-full transition-colors ${isAutoClicking ? 'bg-emerald-400' : 'bg-white/60'}`}
+            ></span>
+            <span className="text-[0.65rem] uppercase">
+              {isAutoClicking ? '正在持诵' : '准备持诵'}
+            </span>
+          </motion.button>
 
-      {/* 自动点击按钮 - 右下角 */}
-      <motion.div className="fixed bottom-6 right-6 z-40 group">
-        <motion.button
-          onClick={() => setIsAutoClicking(!isAutoClicking)}
-          onMouseEnter={() => setShowTooltip(true)}
-          onMouseLeave={() => setShowTooltip(false)}
-          animate={{
-            backgroundColor: isAutoClicking ? 'rgba(212, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.2)',
-            boxShadow: isAutoClicking ? '0 0 15px rgba(212, 0, 0, 0.6)' : 'none'
-          }}
-          className="px-3 py-1.5 text-xs rounded-full border border-white/30 transition-all hover:border-white/50 opacity-60 hover:opacity-100 z-40"
-        >
-          {isAutoClicking ? '🔴 持诵中' : '⚪ 持诵'}
-        </motion.button>
-        
-        {/* 提示框 */}
-        <AnimatePresence>
-          {showTooltip && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.2 }}
-              className="absolute bottom-full right-0 mb-2 px-4 py-3 bg-red-900/90 text-white text-xs rounded border border-red-400/50 pointer-events-none whitespace-nowrap"
-              style={{ fontFamily: "'STKaiti', 'KaiTi', serif" }}
-            >
-              <div className="font-semibold">一心持诵</div>
-              <div className="text-xs opacity-80 mt-1">一百零八遍 · 消解烦恼</div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          {/* 提示框 */}
+          <AnimatePresence>
+            {showTooltip && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ duration: 0.2 }}
+                className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-4 py-3 bg-red-900/90 text-white text-xs rounded border border-red-400/50 pointer-events-none whitespace-nowrap"
+                style={{ fontFamily: "'STKaiti', 'KaiTi', serif" }}
+              >
+                <div className="font-semibold">一心持诵</div>
+                <div className="text-xs opacity-80 mt-1">一百零八遍 · 消解烦恼</div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div
+            className="px-4 py-2 bg-black/30 backdrop-blur-md rounded-full border border-white/10 whitespace-nowrap text-[0.65rem] tracking-[0.4em] opacity-70"
+            style={{ fontFamily: "'STKaiti', 'KaiTi', serif" }}
+          >
+            每一击 · 都是福
+          </div>
+        </div>
       </motion.div>
 
     </main>

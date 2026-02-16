@@ -56,8 +56,8 @@ export default function BlessingPopup() {
       setPosition(positions[Math.floor(Math.random() * positions.length)])
     }
 
-    // 重要里程碑显示4秒，非重要里程碑显示3秒
-    const displayTime = important ? 4000 : 3000
+    // 重要里程碑显示4秒，非重要里程碑显示5秒
+    const displayTime = important ? 4000 : 5000
     const t = setTimeout(() => setVisible(false), displayTime)
     return () => clearTimeout(t)
   }, [count])
